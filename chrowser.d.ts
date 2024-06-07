@@ -35,6 +35,7 @@ declare class TabHelper implements TabHandlerInterface, TabSessionZoneMaker {
     addScriptToRunOnNewDocument(script: string | TabEvaluateFunction, tabId: string): Promise<void>;
     evaluateScriptOnTab(script: string | TabEvaluateFunction, tabId: string, _shouldAwait?: boolean): Promise<any>;
     waitUntilNetworkIdle(tabId: string, options: WaitUntilNetworkIdleOptions): Promise<void>;
+    waitForSelectorAppear(tabId: string, selector: string, options?: WaitForSelectorOptions): Promise<void>;
     close(tabId: string): Promise<void>;
 }
 
@@ -44,6 +45,7 @@ declare class Tab {
     private helper;
     constructor(_tabId: string, helper: TabHelper);
     navigate(options: TabNavigationOptions): Promise<void>;
+    waitForSelectorAppear(selector: string, options?: WaitForSelectorOptions): Promise<void>;
     evaluate(script: TabEvaluateFunction | string): Promise<any>;
     get tabId(): string;
     private _mouseHandler?;
@@ -55,6 +57,10 @@ declare class Tab {
 interface WaitUntilNetworkIdleOptions {
     idleInterval: number;
     idleNumber?: number;
+}
+interface WaitForSelectorOptions {
+    pollInterval?: number;
+    waitTimeOut?: number;
 }
 
 interface TabHandlerInterface {
