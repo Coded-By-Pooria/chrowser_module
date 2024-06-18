@@ -33,7 +33,7 @@ declare class RemoteNodeDelegator<T extends Node = HTMLElement> extends RemoteOb
     click(): Promise<void>;
     $$(selector: string): Promise<RemoteNodeDelegator[]>;
     $evaluate<T extends TabEvaluateFunction<HTMLElement>>(selector: string, handler: T): Promise<ReturnType<T>>;
-    $$evaluate<T extends TabEvaluateFunction<HTMLElement[]>>(selector: string, handler: T): Promise<ReturnType<T>[]>;
+    $$evaluate<T extends TabEvaluateFunction<HTMLElement[]>>(selector: string, handler: T): Promise<ReturnType<T>>;
     private released;
     release(): Promise<void>;
 }
@@ -43,7 +43,7 @@ interface Evaluable {
     $(selector: string): Promise<RemoteNodeDelegator | null>;
     $$(selector: string): Promise<RemoteNodeDelegator[]>;
     $evaluate<T extends TabEvaluateFunction<HTMLElement>>(selector: string, handler: T): Promise<ReturnType<T>>;
-    $$evaluate<T extends TabEvaluateFunction<HTMLElement[]>>(selector: string, handler: T): Promise<ReturnType<T>[]>;
+    $$evaluate<T extends TabEvaluateFunction<HTMLElement[]>>(selector: string, handler: T): Promise<ReturnType<T>>;
 }
 
 type Input = CDP.DoEventPromises<'Input'> & CDP.DoEventListeners<'Input'> & CDP.AddOptParams<CDP.OptIfParamNullable<ProtocolProxyApi.InputApi>>;
