@@ -32,8 +32,8 @@ declare class RemoteNodeDelegator<T extends Node = HTMLElement> extends RemoteOb
     $(selector: string): Promise<RemoteNodeDelegator | null>;
     click(): Promise<void>;
     $$(selector: string): Promise<RemoteNodeDelegator[]>;
-    $evaluate<T extends TabEvaluateFunction>(selector: string, handler: T): Promise<ReturnType<T>>;
-    $$evaluate<T extends TabEvaluateFunction>(selector: string, handler: T): Promise<ReturnType<T>[]>;
+    $evaluate<T extends TabEvaluateFunction<HTMLElement>>(selector: string, handler: T): Promise<ReturnType<T>>;
+    $$evaluate<T extends TabEvaluateFunction<HTMLElement[]>>(selector: string, handler: T): Promise<ReturnType<T>[]>;
     private released;
     release(): Promise<void>;
 }
@@ -42,8 +42,8 @@ interface Evaluable {
     evaluate<T extends TabEvaluateFunction>(script: T | string, ...args: any[]): Promise<Awaited<ReturnType<T>>>;
     $(selector: string): Promise<RemoteNodeDelegator | null>;
     $$(selector: string): Promise<RemoteNodeDelegator[]>;
-    $evaluate<T extends TabEvaluateFunction<RemoteNodeDelegator<HTMLElement>>>(selector: string, handler: T): Promise<ReturnType<T>>;
-    $$evaluate<T extends TabEvaluateFunction<RemoteNodeDelegator<HTMLElement>[]>>(selector: string, handler: T): Promise<ReturnType<T>[]>;
+    $evaluate<T extends TabEvaluateFunction<HTMLElement>>(selector: string, handler: T): Promise<ReturnType<T>>;
+    $$evaluate<T extends TabEvaluateFunction<HTMLElement[]>>(selector: string, handler: T): Promise<ReturnType<T>[]>;
 }
 
 type Input = CDP.DoEventPromises<'Input'> & CDP.DoEventListeners<'Input'> & CDP.AddOptParams<CDP.OptIfParamNullable<ProtocolProxyApi.InputApi>>;
