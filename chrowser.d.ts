@@ -61,7 +61,8 @@ declare class TabMouseHandler {
     }): Promise<void>;
 }
 
-type TabNavigationOptions = Protocol.Page.NavigateRequest & {
+type TabNavigationOptions = {
+    url: string;
     waitUntil?: 'documentloaded' | 'load';
 };
 
