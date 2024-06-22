@@ -7,6 +7,8 @@ type TabNavigationOptions = {
     waitUntil?: 'documentloaded' | 'load';
 };
 
+type WaiterSignalFunc = TabEvaluateFunction<any, boolean | Promise<boolean>>;
+
 type Input = CDP.DoEventPromises<'Input'> & CDP.DoEventListeners<'Input'> & CDP.AddOptParams<CDP.OptIfParamNullable<ProtocolProxyApi.InputApi>>;
 
 interface TabMouseBaseOptions {
@@ -78,7 +80,7 @@ interface Tab extends Evaluable {
     mouseHandler: MouseHandler;
     navigate(options: TabNavigationOptions): Promise<void>;
     waitForSelectorAppear(selector: string, options?: PollWaitForOptions): Promise<void>;
-    waitUntilReturnTrue(script: string | TabEvaluateFunction, options?: PollWaitForOptions, ...args: any[]): Promise<void>;
+    waitUntilReturnTrue(script: WaiterSignalFunc, options?: PollWaitForOptions, ...args: any[]): Promise<void>;
     addScriptToRunOnNewDocument(script: string | TabEvaluateFunction): Promise<void>;
     waitUntilNetworkIdle(options: WaitUntilNetworkIdleOptions): Promise<void>;
     close(): Promise<void>;
