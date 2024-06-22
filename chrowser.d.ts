@@ -78,7 +78,7 @@ interface Tab extends Evaluable {
     mouseHandler: MouseHandler;
     navigate(options: TabNavigationOptions): Promise<void>;
     waitForSelectorAppear(selector: string, options?: PollWaitForOptions): Promise<void>;
-    waitUntilReturnTrue(script: string | TabEvaluateFunction, options?: PollWaitForOptions): Promise<void>;
+    waitUntilReturnTrue(script: string | TabEvaluateFunction, options?: PollWaitForOptions, ...args: any[]): Promise<void>;
     addScriptToRunOnNewDocument(script: string | TabEvaluateFunction): Promise<void>;
     waitUntilNetworkIdle(options: WaitUntilNetworkIdleOptions): Promise<void>;
     close(): Promise<void>;
