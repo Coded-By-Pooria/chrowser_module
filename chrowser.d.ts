@@ -2,10 +2,35 @@ import Protocol from 'devtools-protocol';
 import CDP from 'chrome-remote-interface';
 import ProtocolProxyApi from 'devtools-protocol/types/protocol-proxy-api';
 
+type TabNavigationOptions = {
+    url: string;
+    waitUntil?: 'documentloaded' | 'load';
+};
+
+type Input = CDP.DoEventPromises<'Input'> & CDP.DoEventListeners<'Input'> & CDP.AddOptParams<CDP.OptIfParamNullable<ProtocolProxyApi.InputApi>>;
+
+interface TabMouseBaseOptions {
+    x: number;
+    y: number;
+}
+declare class MouseHandler {
+    private inputContext;
+    constructor(inputContext: Input);
+    move(options: TabMouseBaseOptions): Promise<void>;
+    click(options: TabMouseBaseOptions & {
+        delay?: number;
+    }): Promise<void>;
+}
+
+interface NodeROCreator {
+    createRO(ro: Protocol.Runtime.RemoteObject): RemoteNodeDelegator;
+}
+
 declare class ExecutionContext {
     private context;
+    private creator;
     private id;
-    constructor(context: CDP.Client, id: number);
+    constructor(context: CDP.Client, creator: NodeROCreator, id: number);
     get executionContextId(): number;
     private runExpression;
     private runFunction;
@@ -27,10 +52,11 @@ declare class RemoteObjectDelegator {
 declare class RemoteNodeDelegator<T extends Node = HTMLElement> extends RemoteObjectDelegator implements Evaluable {
     #private;
     private context;
-    constructor(context: ExecutionContext, ro: Protocol.Runtime.RemoteObject);
+    private mouseHandler;
+    constructor(context: ExecutionContext, mouseHandler: MouseHandler, ro: Protocol.Runtime.RemoteObject);
     evaluate(script: string | TabEvaluateFunction, ...args: any[]): Promise<any>;
     $(selector: string): Promise<RemoteNodeDelegator | null>;
-    click(): Promise<void>;
+    click(withMouse?: boolean): Promise<void>;
     $$(selector: string): Promise<RemoteNodeDelegator[]>;
     $evaluate<T extends TabEvaluateFunction<HTMLElement>>(selector: string, handler: T): Promise<ReturnType<T>>;
     $$evaluate<T extends TabEvaluateFunction<HTMLElement[]>>(selector: string, handler: T): Promise<ReturnType<T>>;
@@ -46,30 +72,10 @@ interface Evaluable {
     $$evaluate<T extends TabEvaluateFunction<HTMLElement[]>>(selector: string, handler: T): Promise<ReturnType<T>>;
 }
 
-type Input = CDP.DoEventPromises<'Input'> & CDP.DoEventListeners<'Input'> & CDP.AddOptParams<CDP.OptIfParamNullable<ProtocolProxyApi.InputApi>>;
-
-interface TabMouseBaseOptions {
-    x: number;
-    y: number;
-}
-declare class TabMouseHandler {
-    private inputContext;
-    constructor(inputContext: Input);
-    move(options: TabMouseBaseOptions): Promise<void>;
-    click(options: TabMouseBaseOptions & {
-        delay?: number;
-    }): Promise<void>;
-}
-
-type TabNavigationOptions = {
-    url: string;
-    waitUntil?: 'documentloaded' | 'load';
-};
-
 type TabEvaluateFunction<T = any, P = any> = (...args: T[]) => P;
 interface Tab extends Evaluable {
     tabId: string;
-    mouseHandler: TabMouseHandler;
+    mouseHandler: MouseHandler;
     navigate(options: TabNavigationOptions): Promise<void>;
     waitForSelectorAppear(selector: string, options?: PollWaitForOptions): Promise<void>;
     waitUntilReturnTrue(script: string | TabEvaluateFunction, options?: PollWaitForOptions): Promise<void>;
