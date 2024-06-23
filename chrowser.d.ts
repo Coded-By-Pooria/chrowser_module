@@ -84,6 +84,7 @@ interface Tab extends Evaluable {
     addScriptToRunOnNewDocument(script: string | TabEvaluateFunction): Promise<void>;
     waitUntilNetworkIdle(options: WaitUntilNetworkIdleOptions): Promise<void>;
     close(): Promise<void>;
+    bringToFront(): Promise<void>;
 }
 interface WaitUntilNetworkIdleOptions {
     idleInterval: number;
