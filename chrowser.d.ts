@@ -47,7 +47,7 @@ declare class RemoteObjectDelegator {
     constructor(ro: Protocol.Runtime.RemoteObject);
     get id(): string;
     get type(): "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function";
-    get subType(): "array" | "null" | "node" | "regexp" | "date" | "map" | "set" | "weakmap" | "weakset" | "iterator" | "generator" | "error" | "proxy" | "promise" | "typedarray" | "arraybuffer" | "dataview" | "webassemblymemory" | "wasmvalue" | undefined;
+    get subType(): "error" | "array" | "null" | "node" | "regexp" | "date" | "map" | "set" | "weakmap" | "weakset" | "iterator" | "generator" | "proxy" | "promise" | "typedarray" | "arraybuffer" | "dataview" | "webassemblymemory" | "wasmvalue" | undefined;
     get description(): string | undefined;
 }
 
@@ -81,10 +81,17 @@ interface Tab extends Evaluable {
     navigate(options: TabNavigationOptions): Promise<void>;
     waitForSelectorAppear(selector: string, options?: PollWaitForOptions): Promise<void>;
     waitUntilReturnTrue(script: WaiterSignalFunc, options?: PollWaitForOptions, ...args: any[]): Promise<void>;
-    addScriptToRunOnNewDocument(script: string | TabEvaluateFunction): Promise<void>;
+    addScriptToRunOnNewDocument(script: string | TabEvaluateFunction, ...args: any[]): Promise<string>;
     waitUntilNetworkIdle(options: WaitUntilNetworkIdleOptions): Promise<void>;
     close(): Promise<void>;
     bringToFront(): Promise<void>;
+    screenshot(options: {
+        savePath: string;
+        format?: 'png' | 'webp' | 'jpeg';
+        quality?: number;
+        totalPage?: boolean;
+    }): Promise<void>;
+    browser: Browser;
 }
 interface WaitUntilNetworkIdleOptions {
     idleInterval: number;
@@ -109,10 +116,15 @@ declare class Browser implements TabHandlerInterface {
     private browserOptions?;
     private isClosed;
     static create(options?: BrowserOptions): Promise<Browser>;
-    private constructor();
+    protected constructor(browserOptions?: BrowserOptions | undefined);
     private window;
     private tabHandler;
-    private init;
+    private _userAgent;
+    private _version;
+    protected init(): Promise<void>;
+    get version(): string;
+    get port(): number;
+    get userAgent(): string;
     newTab(options?: {
         url: string;
     }): Promise<Tab>;
