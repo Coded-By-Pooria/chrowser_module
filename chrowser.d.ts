@@ -1,6 +1,15 @@
-import Protocol from 'devtools-protocol';
 import CDP from 'chrome-remote-interface';
 import ProtocolProxyApi from 'devtools-protocol/types/protocol-proxy-api';
+import Protocol from 'devtools-protocol';
+import { BaseNotifier } from '@pourianof/notifier';
+
+interface Evaluable {
+    evaluate<T extends TabEvaluateFunction>(script: T | string, ...args: any[]): Promise<Awaited<ReturnType<T>>>;
+    $(selector: string): Promise<RemoteNodeDelegator | null>;
+    $$(selector: string): Promise<RemoteNodeDelegator[]>;
+    $evaluate<T extends TabEvaluateFunction<HTMLElement>>(selector: string, handler: T): Promise<ReturnType<T>>;
+    $$evaluate<T extends TabEvaluateFunction<HTMLElement[]>>(selector: string, handler: T): Promise<ReturnType<T>>;
+}
 
 type TabNavigationOptions = {
     url: string;
@@ -14,6 +23,10 @@ type Input = CDP.DoEventPromises<'Input'> & CDP.DoEventListeners<'Input'> & CDP.
 interface TabMouseBaseOptions {
     x: number;
     y: number;
+    tiltX?: number;
+    tiltY?: number;
+    mousePressure?: number;
+    tangentialPressure?: number;
 }
 declare class MouseHandler {
     private inputContext;
@@ -24,8 +37,106 @@ declare class MouseHandler {
     }): Promise<void>;
 }
 
+declare enum KeyboardKeys {
+    ALPHABET_A = "KeyA",
+    ALPHABET_B = "KeyB",
+    ALPHABET_C = "KeyC",
+    ALPHABET_D = "KeyD",
+    ALPHABET_E = "KeyE",
+    ALPHABET_F = "KeyF",
+    ALPHABET_G = "KeyG",
+    ALPHABET_H = "KeyH",
+    ALPHABET_I = "KeyI",
+    ALPHABET_J = "KeyJ",
+    ALPHABET_K = "KeyK",
+    ALPHABET_L = "KeyL",
+    ALPHABET_M = "KeyM",
+    ALPHABET_N = "KeyN",
+    ALPHABET_O = "KeyO",
+    ALPHABET_Q = "KeyQ",
+    ALPHABET_R = "KeyR",
+    ALPHABET_S = "KeyS",
+    ALPHABET_T = "KeyT",
+    ALPHABET_U = "KeyU",
+    ALPHABET_V = "KeyV",
+    ALPHABET_W = "KeyW",
+    ALPHABET_X = "KeyX",
+    ALPHABET_Y = "KeyY",
+    ALPHABET_Z = "KeyZ",
+    SPACE_BAR = "Space",
+    ENTER = "Enter",
+    KEY_UP = "ArrowUp",
+    KEY_DOWN = "ArrowDOWN",
+    KEY_LEFT = "ArrowLeft",
+    KEY_RIGHT = "ArrowRight",
+    CAPS_LOCK = "CapsLock",
+    TAB = "Tab",
+    SHIFT_LEFT = "ShiftLeft",
+    SHIFT_RIGHT = "ShiftRight",
+    CONTROL_LEFT = "ControlLeft",
+    CONTROL_RIGHT = "ControlRight",
+    BACKSPACE = "Backspace",
+    ESC = "Escape",
+    ALT_LEFT = "AltLeft",
+    ALT_RIGHT = "AltRight",
+    DEL = "Delete",
+    NUMPAD_1 = "Numpad1",
+    NUMPAD_2 = "Numpad1",
+    NUMPAD_3 = "Numpad1",
+    NUMPAD_4 = "Numpad1",
+    NUMPAD_5 = "Numpad1",
+    NUMPAD_6 = "Numpad1",
+    NUMPAD_7 = "Numpad1",
+    NUMPAD_8 = "Numpad1",
+    NUMPAD_9 = "Numpad1",
+    NUMPAD_0 = "Numpad1",
+    NUMPAD_SUBTRACT = "NumpadSubtract",
+    NUMPAD_SUM = "NumpadAdd",
+    NUMPAD_ENTER = "NumpadEnter",
+    NUMPAD_DOT = "NumpadDecimal",
+    NUMPAD_DIVIDE = "NumpadDivide",
+    NUMPAD_MULTIPLE = "NumpadMultiply",
+    NUMLOCK = "NumLock",
+    MINUS = "Minus",
+    DIGIT_1 = "Digit1",
+    DIGIT_2 = "Digit2",
+    DIGIT_3 = "Digit3",
+    DIGIT_4 = "Digit4",
+    DIGIT_5 = "Digit5",
+    DIGIT_6 = "Digit6",
+    DIGIT_7 = "Digit7",
+    DIGIT_8 = "Digit8",
+    DIGIT_9 = "Digit9",
+    BACK_QOUTE = "Backquote"
+}
+declare class KeyboardHandler {
+    private inputContext;
+    constructor(inputContext: Input);
+    keyDown(key: KeyboardKeys): Promise<void>;
+    keyUp(key: KeyboardKeys): Promise<void>;
+    press(key: KeyboardKeys, options?: {
+        delay?: number;
+    }): Promise<void>;
+}
+
 interface NodeROCreator {
     createRO(ro: Protocol.Runtime.RemoteObject): RemoteNodeDelegator;
+}
+type FrameEvents = {
+    NavigateRequest: {
+        url: string;
+        reason: 'navigateMethod' | 'documentInnerAction';
+    };
+    NavigateDone: {
+        url?: string;
+    };
+};
+interface FrameBase extends Evaluable, BaseNotifier<FrameEvents> {
+    navigate(options: TabNavigationOptions): Promise<void>;
+    waitForSelectorAppear(selector: string, options?: PollWaitForOptions): Promise<void>;
+    waitUntilReturnTrue(script: WaiterSignalFunc, options?: PollWaitForOptions, ...args: any[]): Promise<void>;
+    addScriptToRunOnNewDocument(script: string | TabEvaluateFunction, ...args: any[]): Promise<string>;
+    waitUntilNetworkIdle(options: WaitUntilNetworkIdleOptions): Promise<void>;
 }
 
 declare class ExecutionContext {
@@ -66,23 +177,11 @@ declare class RemoteNodeDelegator<T extends Node = HTMLElement> extends RemoteOb
     release(): Promise<void>;
 }
 
-interface Evaluable {
-    evaluate<T extends TabEvaluateFunction>(script: T | string, ...args: any[]): Promise<Awaited<ReturnType<T>>>;
-    $(selector: string): Promise<RemoteNodeDelegator | null>;
-    $$(selector: string): Promise<RemoteNodeDelegator[]>;
-    $evaluate<T extends TabEvaluateFunction<HTMLElement>>(selector: string, handler: T): Promise<ReturnType<T>>;
-    $$evaluate<T extends TabEvaluateFunction<HTMLElement[]>>(selector: string, handler: T): Promise<ReturnType<T>>;
-}
-
 type TabEvaluateFunction<T = any, P = any> = (...args: T[]) => P;
-interface Tab extends Evaluable {
+interface Tab extends FrameBase {
     tabId: string;
     mouseHandler: MouseHandler;
-    navigate(options: TabNavigationOptions): Promise<void>;
-    waitForSelectorAppear(selector: string, options?: PollWaitForOptions): Promise<void>;
-    waitUntilReturnTrue(script: WaiterSignalFunc, options?: PollWaitForOptions, ...args: any[]): Promise<void>;
-    addScriptToRunOnNewDocument(script: string | TabEvaluateFunction, ...args: any[]): Promise<string>;
-    waitUntilNetworkIdle(options: WaitUntilNetworkIdleOptions): Promise<void>;
+    keyboardHandler: KeyboardHandler;
     close(): Promise<void>;
     bringToFront(): Promise<void>;
     screenshot(options: {
