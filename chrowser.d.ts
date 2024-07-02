@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import CDP from 'chrome-remote-interface';
 import ProtocolProxyApi from 'devtools-protocol/types/protocol-proxy-api';
 import Protocol from 'devtools-protocol';
@@ -16,9 +17,37 @@ type TabNavigationOptions = {
     waitUntil?: 'documentloaded' | 'load';
 };
 
+declare class BaseWaiterMixin {
+    protected waiterResolver: () => void;
+    protected waiterRejecter: (reason?: any) => void;
+    protected wait(): Promise<void>;
+}
+
+declare abstract class BasePollStateMixin extends BaseWaiterMixin {
+    protected pollInterval: number;
+    protected timeOut: number;
+    constructor(pollInterval: number, timeOut: number);
+    private startTime;
+    protected start(): Promise<void>;
+    private poll;
+    private scheduleNextPoll;
+    protected abstract onTimeOut(): any;
+    protected abstract polling(): Promise<boolean>;
+}
+
 type WaiterSignalFunc = TabEvaluateFunction<any, boolean | Promise<boolean>>;
+declare class WaitUntilReturnTrue extends BasePollStateMixin {
+    private signalFunc;
+    private evaluateContext;
+    private args?;
+    static start(signalFunc: WaiterSignalFunc, evaluateContext: Evaluable, pollInterval?: number, timeOut?: number, ...args: any[]): Promise<void>;
+    private constructor();
+    protected onTimeOut(): void;
+    protected polling(): Promise<boolean>;
+}
 
 type Input = CDP.DoEventPromises<'Input'> & CDP.DoEventListeners<'Input'> & CDP.AddOptParams<CDP.OptIfParamNullable<ProtocolProxyApi.InputApi>>;
+type Network = CDP.DoEventPromises<'Network'> & CDP.DoEventListeners<'Network'> & CDP.AddOptParams<CDP.OptIfParamNullable<ProtocolProxyApi.NetworkApi>>;
 
 interface TabMouseBaseOptions {
     x: number;
@@ -232,4 +261,32 @@ declare class Browser implements TabHandlerInterface {
     getAllOpenTabs(): Tab[];
 }
 
-export { type Tab, type TabEvaluateFunction, type TabNavigationOptions, Browser as default };
+declare class EvaluateException extends Error {
+    private error;
+    static mapToCallSite(stack: Protocol.Runtime.StackTrace): NodeJS.CallSite[];
+    constructor(error: Protocol.Runtime.ExceptionDetails);
+    printEvalStackTrace(): any;
+}
+
+declare class WaitforSelectorAppearTimeoutException extends Error {
+    constructor(timeout: number, selector: string);
+}
+
+declare class WaitUntilNetworkIdleHandler extends BaseWaiterMixin {
+    private networkContext;
+    private idleInterval;
+    private tolerance;
+    private constructor();
+    private lastIdleItem;
+    private isResolved;
+    private timerId;
+    private start;
+    private resetTimer;
+    private setTimer;
+    private resolve;
+    static start(networkContext: Network, options: WaitUntilNetworkIdleOptions & {
+        tolerance?: number;
+    }): Promise<void>;
+}
+
+export { EvaluateException, type Tab, type TabEvaluateFunction, type TabNavigationOptions, WaitUntilNetworkIdleHandler, WaitUntilReturnTrue, WaitforSelectorAppearTimeoutException, Browser as default };
