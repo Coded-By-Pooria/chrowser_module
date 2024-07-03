@@ -17,6 +17,9 @@ type TabNavigationOptions = {
     waitUntil?: 'documentloaded' | 'load';
 };
 
+declare class WaitForSelector extends Error {
+}
+
 declare class BaseWaiterMixin {
     protected waiterResolver: () => void;
     protected waiterRejecter: (reason?: any) => void;
@@ -31,7 +34,7 @@ declare abstract class BasePollStateMixin extends BaseWaiterMixin {
     protected start(): Promise<void>;
     private poll;
     private scheduleNextPoll;
-    protected abstract onTimeOut(): any;
+    protected abstract onTimeOut(): Error;
     protected abstract polling(): Promise<boolean>;
 }
 
@@ -42,7 +45,7 @@ declare class WaitUntilReturnTrue extends BasePollStateMixin {
     private args?;
     static start(signalFunc: WaiterSignalFunc, evaluateContext: Evaluable, pollInterval?: number, timeOut?: number, ...args: any[]): Promise<void>;
     private constructor();
-    protected onTimeOut(): void;
+    protected onTimeOut(): WaitForSelector;
     protected polling(): Promise<boolean>;
 }
 
@@ -163,6 +166,7 @@ type FrameEvents = {
 interface FrameBase extends Evaluable, BaseNotifier<FrameEvents> {
     navigate(options: TabNavigationOptions): Promise<void>;
     waitForSelectorAppear(selector: string, options?: PollWaitForOptions): Promise<void>;
+    reload(): Promise<void>;
     waitUntilReturnTrue(script: WaiterSignalFunc, options?: PollWaitForOptions, ...args: any[]): Promise<void>;
     addScriptToRunOnNewDocument(script: string | TabEvaluateFunction, ...args: any[]): Promise<string>;
     waitUntilNetworkIdle(options: WaitUntilNetworkIdleOptions): Promise<void>;
