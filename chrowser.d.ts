@@ -151,19 +151,42 @@ declare class KeyboardHandler {
     }): Promise<void>;
 }
 
+interface WaitForPossibleNavigationOptions {
+    waitFor?: number;
+}
+interface Navigatable {
+    navigate(options: TabNavigationOptions): Promise<void>;
+    waitForPossibleNavigation(options?: WaitForPossibleNavigationOptions): Promise<void>;
+}
+type NavigationType = 'NavigationMethod' | 'DocumentInnerAction';
+interface NavigationFinishState {
+    state: NavigationState;
+    url: string;
+    type: NavigationType;
+}
+interface NavigationObj {
+    isDone: boolean;
+    isCanceled: boolean;
+    isFinished: boolean;
+    navigationType: NavigationType;
+    whenComplete: () => Promise<NavigationFinishState>;
+}
+type NavigationEvents = {
+    NavigateRequest: NavigationObj;
+};
+declare enum NavigationState {
+    DONE = 0,
+    CANCELED = 1,
+    NOT_COMPLETED = 2,
+    DOCUMENT_LOADED = 3,
+    FORGOTTED = 4
+}
+
 interface NodeROCreator {
     createRO(ro: Protocol.Runtime.RemoteObject): RemoteNodeDelegator;
 }
-type FrameEvents = {
-    NavigateRequest: {
-        url: string;
-        reason: 'navigateMethod' | 'documentInnerAction';
-    };
-    NavigateDone: {
-        url?: string;
-    };
-};
-interface FrameBase extends Evaluable, BaseNotifier<FrameEvents> {
+type FrameEvents = NavigationEvents;
+interface FrameBase extends Evaluable, BaseNotifier<FrameEvents>, Navigatable {
     navigate(options: TabNavigationOptions): Promise<void>;
     waitForSelectorAppear(selector: string, options?: PollWaitForOptions): Promise<void>;
     reload(): Promise<void>;
