@@ -169,7 +169,8 @@ interface NavigationObj {
     isCanceled: boolean;
     isFinished: boolean;
     navigationType: NavigationType;
-    whenComplete: () => Promise<NavigationFinishState>;
+    whenComplete(): Promise<NavigationFinishState>;
+    whenDocumentLoaded(): Promise<void>;
 }
 type NavigationEvents = {
     NavigateRequest: NavigationObj;
