@@ -248,6 +248,7 @@ interface Tab extends FrameBase {
         totalPage?: boolean;
     }): Promise<void>;
     browser: Browser;
+    getTabTitle(): Promise<string>;
 }
 interface WaitUntilNetworkIdleOptions {
     idleInterval: number;
@@ -280,6 +281,7 @@ declare class Browser implements TabHandlerInterface {
     protected init(): Promise<void>;
     get version(): string;
     get port(): number;
+    get pid(): number;
     get userAgent(): string;
     newTab(options?: {
         url: string;
