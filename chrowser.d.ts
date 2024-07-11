@@ -1,8 +1,9 @@
 /// <reference types="node" />
+import * as Notifier from '@pourianof/notifier';
+import { BaseNotifier, ListenCallback } from '@pourianof/notifier';
 import CDP from 'chrome-remote-interface';
 import ProtocolProxyApi from 'devtools-protocol/types/protocol-proxy-api';
 import Protocol from 'devtools-protocol';
-import { BaseNotifier } from '@pourianof/notifier';
 
 interface Evaluable {
     evaluate<T extends TabEvaluateFunction>(script: T | string, ...args: any[]): Promise<Awaited<ReturnType<T>>>;
@@ -269,16 +270,21 @@ interface BrowserOptions {
     args?: string[];
     userDir?: string;
 }
-declare class Browser implements TabHandlerInterface {
+declare class Browser implements TabHandlerInterface, BaseNotifier<'closed'> {
     private browserOptions?;
     private isClosed;
+    private _notifier;
+    private get notifier();
+    addListener<_E extends 'closed'>(eventName: _E, data: ListenCallback<_E, any>): Notifier.Listener;
     static create(options?: BrowserOptions): Promise<Browser>;
     protected constructor(browserOptions?: BrowserOptions | undefined);
     private window;
     private tabHandler;
     private _userAgent;
     private _version;
+    private closeWaitor;
     protected init(): Promise<void>;
+    waitForClose(): Promise<void>;
     get version(): string;
     get port(): number;
     get pid(): number;
@@ -286,6 +292,7 @@ declare class Browser implements TabHandlerInterface {
     newTab(options?: {
         url: string;
     }): Promise<Tab>;
+    private closeNofiying;
     close(): void;
     private isCloseCheck;
     getAllOpenTabs(): Tab[];
